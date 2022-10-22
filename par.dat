@@ -1,0 +1,201 @@
+;
+; Parameter file for MD simulation program
+;
+
+;===== Prefix and suffix for file names
+$EQ  = "1c"
+$TR  = "$(EQ)10-2"
+
+$TDATA = "d:/results"
+
+;===== Plasma parameters
+Gamma_ee  = 2.0   ; 0.63972 1.27944 2.55888 5.11776
+Z         = 2
+IonNumber = 100
+
+;===== Interaction parameters
+Potential     = CutOff    ; Coulomb, CutOff, Kelbg, CorKelbg, Core, Deutsch
+RealIonMass   = -1.       ;
+CutOffLevel  = -7.       ; in kT
+;MinimumRadius = 1.e-2    ; r=rstep*MinimumRadius stands for r=0
+TemperatureK  =  30000.   ; in K
+TablePoints   = 350.      ; table points per interparticle distance
+;LambdaFactor  = 3.       ; Deutsch lambda is divided by this value
+
+;===== Simulation parameters
+Perfomance = 1e6
+
+;===== Default values
+TimeStep   = 0.001
+IonMotion  = yes
+
+;===================== Local parameters ===================
+[equil]
+ElectronConfig = random        ; random
+IonConfig      = random        ; random, cubic
+IonMotion      = yes
+IonMass               = 1.
+RemoveMomentum        = yes
+OutputInterval        = 50
+EquilibrationTime     = 4.     ; in electron plasma periods
+LangevenAmplitude     = 10.    ; Initial random force amplitude
+EquilTemperature      = 1.
+MaxTempatureDeviation = 1.     ; related to mean devation in eq.
+MinInitDistance       = 0.1    ; Minimal initial interparticle
+                               ; distance / mean distance:
+LogFile = "eq$(EQ).dat"
+OutFile = "eq$(EQ).raw"
+
+[track]
+IonMotion        = yes
+IonMass          = 100.
+StoreCoordinates = yes
+StoreVelocities  = yes
+StoreEnergy      = yes
+StoreCurrent     = no
+OutputInterval   = 1
+;OutputPeriod     = 1.      ; in tau_e (overrides OutputInterval)
+OutputPoints     = 1000000
+;FragmentLen      = 2000
+;FragmentSkip     = 1000
+;FragmentPeriod    = 10.       ; in tau_e (overrides FragmentSkip)
+Append = no
+LogFile = "tr$(TR).dat"
+OutFile = "tr$(TR).raw"
+
+[bound]
+InputPoints = 900000
+MaxPhase = 6  ; in units of 2pi
+EnergyLimit = 0  ; in kT
+LogFile = "bs$(TR)t.dat"
+OutFile  = "bs$(TR)t.raw"
+
+[visualize]
+;InputPoints = 400
+OutputInterval = 10
+;MaxIons   = 65
+Dimension = 3
+BoundStates = yes
+StatFile = "d:/results/bound/stat$(TR).dat"
+OutFile  = "d:/results/bound/pos$(TR).dat"
+BVisFile = "d:/results/bound/bvis$(TR).dat"
+LogFile  = "d:/results/bound/vis$(TR).dat"
+
+[relax]
+$RELAX         = "$(TR)"
+;InputPoints    = 5
+OutputInterval = 5
+;OutputPeriod   = 0.1   ; in tau_e (overrides OutputInterval)
+OutputPoints   = 20
+;SimulationTime = 2.     ; in tau_e (overrides OutputPoints)
+IonMass        = 2.
+;SaveInterval   = 100
+StopIons       = yes
+StopElectrons  = no
+StoreCoordinates = no
+StoreVelocities  = yes
+LogFile = "e:/results/test/enlog$(TR).dat"
+OutFile  = "e:/results/test/en$(RELAX).dat"
+;OutTrack = "$(TDATA)/trne$(RELAX).raw"
+
+[vcorr]
+$VC            = "$(TR)"
+OutputPoints   = 5000
+;MaxTime        = 32.     ; in tau_e (overrides OutputPoints)
+;OutputInterval = 32.
+;InputPoints    = 10000
+;Threads        = 320
+;DispersionFrom = 5.             ; starting time in tau_e
+MeanCurrent    = no
+Correlators    = yes
+;TestFunction   = cos   ; exp, cos
+Liability      = 2.              ; Liability coefficient
+SaveInterval   = 40              ; Only for vcorrtr
+OutFile = "$(TDATA)/vc$(VC).raw"
+
+[sigma]
+$VCW        = "$(VC)"
+Frequency   = 0.
+;MaxFreq     = 100.
+;InputPoints = 5000
+;InputPeriod = 16.123     ; in tau_e (overrides InputPoints)
+Integration = linapprox    ; rectangle, trapezoidal, linapprox
+;IntOutput   = 20
+;Correction1 = 0.00868
+Smoothing    = adaptive    ; cos, cos^2, adaptive
+SmoothingPar = 12.
+;OutFile   = "$(TDATA)/vcw$(VCW).raw"
+;SigmaFile = "$(TDATA)/sigma-tmp1.dat"
+IntFile   = "$(TDATA)/mdep/int$(VC).dat"
+
+;=============================================================
+
+[pairdst]
+;OutputInterval  = 10
+;InputPoints     = 10
+NonEquilibrium  = no
+;MaxDistance     = 1.      ; in units of Landau length
+;DistPoints      = 150
+DistStep        = 0.02     ; in units of Landau length (overrides DistPoints)
+OutFile   = "$(TDATA)/pdst$(TR).dat"
+
+[fkt]
+$FKT           = "$(TR)k2"
+SaveInterval   = 25
+OutputPoints   = 200
+;OutputInterval = 10
+;InputPoints    = 20
+Threads        = 100
+Liability      = 2.       ; Liability coefficient
+WaveNumberFactor = 1.
+OutFile = "$(TDATA)/fkt$(FKT).raw"
+
+[fv]
+$FV            = "$(RELAX)20"
+IonDstr        = yes
+ElectronDstr   = yes
+MaxEnergy      = 4.  ; in kT
+MaxVelocity    = 2.  ; in thermal velosities
+;InputPoints    = 1
+OutputInterval = 100   ; Use intermediate points for averaging
+;OutputPoints   = 10  ; Reduce nout compared to [relax]
+DstrPoints     = 40
+OutFile  = "$(TDATA)/fv$(FV).dat"
+
+
+;=============================================================
+
+[Selection]
+TrackParticle  = 1;  101; 156; 348; 1017
+TrackComponent = 1
+
+[meaneng]
+OldTrack = yes
+OutFile  = "$(TDATA)/eng.dat
+
+[polar]
+InputPoints    = 10000
+OutputInterval = 1260
+Polarization     = no
+MeanCurrent      = no
+OutFile   = "$(TDATA)/pl$(TR)_en.dat"
+
+[trforce]
+;InputPoints    = 10000
+;OutputInterval = 1260
+TableSize      = 3.
+AddCells       = 1
+TotalForce     = no
+NearestImage   = yes
+MoveToBasic    = no
+OutFile   = "$(TDATA)/fr$(TR).dat"
+
+;=============================================================
+
+[enfluct]
+TimeStep         = .002
+OutputInterval   = 20
+OutputPoints     = 500
+ExtFieldAmp      = 1.
+LogFile = "$(TDATA)/enfluct/enfl$(TR).dat"
+;OutFile = "$(TDATA)/enfluct/enfl_sum.dat"
